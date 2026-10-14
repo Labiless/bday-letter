@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Una lettera per te</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <div class="steps" aria-hidden="true"><span class="on"></span><span></span><span></span><span></span></div>
+
+    <main id="stage">
+      <svg id="envelope" viewBox="0 -50 400 320" aria-label="Busta">
+        <defs>
+          <clipPath id="clipTop"><rect x="0" y="-50" width="400" height="108"/></clipPath>
+          <clipPath id="clipBody"><rect x="0" y="58" width="400" height="230"/></clipPath>
+
+          <!-- Fronte della busta, usato due volte: striscia da tagliare + corpo -->
+          <g id="envArt">
+            <rect x="20" y="40" width="360" height="210" rx="6" fill="#fbf7f1" stroke="#e4d9ca" stroke-width="1.5"/>
+            <g transform="translate(306 66)">
+              <rect width="50" height="60" fill="none" stroke="#d9485f" stroke-width="1.5" stroke-dasharray="3 2.5"/>
+              <path d="M25 42 C10 32 12 18 20 18 C23 18 25 21 25 21 C25 21 27 18 30 18 C38 18 40 32 25 42Z" fill="#d9485f"/>
+            </g>
+            <text x="70" y="172" font-family="Caveat" font-size="22" fill="#8a7f78">per</text>
+            <text id="addrName" x="104" y="174" font-family="Caveat" font-weight="700" font-size="40" fill="#3b3330">Giulia Miele</text>
+            <path d="M70 186H300" stroke="#e4d9ca" stroke-width="1.5"/>
+          </g>
+        </defs>
+
+        <ellipse cx="200" cy="256" rx="165" ry="7" fill="#0000000d"/>
+        <path id="mouth" d="M21 58 Q200 46 379 58 Z" fill="#e4d6c2"/>
+
+        <g id="letter">
+          <rect x="46" y="64" width="308" height="180" rx="4" fill="#fff" stroke="#ebe3d8" stroke-width="1.5"/>
+          <text x="200" y="96" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="26" fill="#d9485f">per te ♥</text>
+          <path d="M90 116H310M90 134H310M90 152H260" stroke="#efe8de" stroke-width="2" stroke-linecap="round"/>
+        </g>
+
+        <use href="#envArt" clip-path="url(#clipBody)"/>
+        <g id="strip"><use href="#envArt" clip-path="url(#clipTop)"/></g>
+
+        <line id="guide" x1="40" y1="58" x2="360" y2="58"/>
+        <polyline id="cut" points="40,58"/>
+        <circle id="marker" cx="40" cy="58" r="11"/>
+      </svg>
+    </main>
+
+    <div id="rest"></div>
+    <p id="hint">Prendi il tagliacarte</p>
+  </div>
+
+  <!-- Tagliacarte: la punta è in (170,20) del viewBox -->
+  <div id="tool" class="idle">
+    <svg viewBox="0 0 170 40" aria-hidden="true">
+      <defs>
+        <linearGradient id="toolBlade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#f7f9fb"/>
+          <stop offset=".5" stop-color="#cdd3da"/>
+          <stop offset="1" stop-color="#9aa3ad"/>
+        </linearGradient>
+      </defs>
+      <path d="M66 14 L148 16 Q163 18.5 170 20 Q163 21.5 148 24 L66 26 Z" fill="url(#toolBlade)" stroke="#8b939c" stroke-width=".8"/>
+      <path d="M4 20 Q4 12 13 12 L60 14 L60 26 L13 28 Q4 28 4 20Z" fill="#3b3330"/>
+      <rect x="58" y="8" width="8" height="24" rx="3" fill="#c9a86a"/>
+    </svg>
+  </div>
+
+  <div id="reader" hidden>
+    <div id="fold" class="folded">
+      <div class="panel p3"><div class="face front"></div><div class="face back"></div></div>
+      <div class="panel p2"><div class="face front"></div></div>
+      <div class="panel p1"><div class="face front"></div><div class="face back"><span class="seal">per te ♥</span></div></div>
+
+      <!-- ✏️ Scrivi qui la lettera -->
+      <article id="paper">
+        <h1>Cara <span class="nome">Giulia Miele</span>,</h1>
+        <p>Tanti tanti tanti auguri dalla tua Bellissima famiglia ♥</p>
+        <p>Visto che ormai sei una vera designer e sviluppatrice, abbiamo deciso di regalarti un anno di <b style="color:rgb(255, 72, 0)">Claude Pro</b> così da poter realizzare tutti i tuoi progetti</p>
+        <p class="sign">Buon compleanno ti vogliamo tanto bene ♥<br>…</p>
+      </article>
+    </div>
+    <p id="readHint">Tocca la lettera per aprirla</p> 
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

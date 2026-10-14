@@ -1,0 +1,228 @@
+:root {
+  --bg: #f4efe8;
+  --ink: #3b3330;
+  --muted: #8a7f78;
+  --accent: #d9485f;
+  --paper: #fffdf9;
+  --tool-w: clamp(120px, 30vw, 160px);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+body.mouse-hold, body.mouse-hold * { cursor: none !important; }
+
+#app {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 32px;
+}
+
+/* ---------- Passi ---------- */
+.steps { display: flex; gap: 8px; }
+.steps span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d8cfc4;
+  transition: background .4s, transform .4s;
+}
+.steps span.on { background: var(--ink); }
+
+/* ---------- Busta ---------- */
+#stage {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#stage.shake { animation: shake .35s; }
+@keyframes shake {
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-3px); }
+}
+
+#envelope {
+  width: min(100%, 520px);
+  max-height: 100%;
+  overflow: visible;
+  transition: transform .8s cubic-bezier(.5, 0, .7, .4), opacity .6s;
+}
+#envelope.away { transform: translateY(60px); opacity: 0; }
+
+#guide {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 6;
+  stroke-linecap: round;
+  animation: march 1.2s linear infinite;
+}
+@keyframes march { to { stroke-dashoffset: -11; } }
+
+#cut { fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+#marker {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse { 50% { transform: scale(1.4); opacity: .3; } }
+
+#mouth { opacity: 0; transition: opacity .3s; }
+#strip { transform-box: view-box; transform-origin: 200px 50px; }
+#letter { transition: transform .7s cubic-bezier(.3, 1.3, .5, 1), opacity .6s; }
+#letter.dragging { transition: none; }
+
+#envelope.opened #mouth { opacity: 1; }
+#envelope.opened #strip { animation: stripOff 1.1s cubic-bezier(.4, 0, .7, .3) forwards; }
+#envelope.opened :is(#guide, #marker, #cut) { opacity: 0; transition: opacity .3s; }
+@keyframes stripOff {
+  0%   { transform: none; }
+  25%  { transform: translateY(-10px) rotate(-1.5deg); }
+  100% { transform: translate(120px, -300px) rotate(24deg); opacity: 0; }
+}
+
+/* ---------- Tagliacarte ---------- */
+#rest { height: 64px; width: 100%; flex: none; }
+
+#tool {
+  position: fixed;
+  left: -400px;
+  top: 0;
+  width: var(--tool-w);
+  z-index: 50;
+  transform-origin: 100% 50%;
+  filter: drop-shadow(2px 4px 3px #00000022);
+  touch-action: none;
+  cursor: grab;
+}
+#tool svg { display: block; width: 100%; height: auto; }
+#tool.idle { transition: left .5s cubic-bezier(.3, 1.3, .5, 1), top .5s cubic-bezier(.3, 1.3, .5, 1), transform .5s, opacity .5s; }
+#tool.idle:not(.gone) svg { animation: bob 1.8s ease-in-out infinite; }
+#tool.holding { pointer-events: none; filter: drop-shadow(6px 12px 5px #0000001a); }
+#tool.gone { opacity: 0; pointer-events: none; }
+@keyframes bob { 50% { transform: translateY(-4px); } }
+
+/* ---------- Indicazione ---------- */
+#hint, #readHint {
+  margin: 0;
+  min-height: 1.4em;
+  font-size: 15px;
+  letter-spacing: .02em;
+  color: var(--muted);
+  text-align: center;
+  transition: opacity .2s;
+}
+#hint.swap, #readHint.swap { opacity: 0; }
+
+/* ---------- Lettera ---------- */
+#reader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 24px 16px;
+  background: var(--bg);
+  animation: fadeIn .6s both;
+}
+#reader[hidden] { display: none; }
+@keyframes fadeIn { from { opacity: 0; } }
+
+#fold {
+  position: relative;
+  width: min(100%, 420px);
+  height: min(72dvh, 600px);
+  perspective: 1400px;
+  transform-style: preserve-3d;
+  cursor: pointer;
+  animation: rise .7s cubic-bezier(.3, 1.2, .5, 1) both;
+}
+@keyframes rise { from { transform: translateY(40px); opacity: 0; } }
+
+.panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: calc(100% / 3);
+  transform-style: preserve-3d;
+  transition: transform .8s cubic-bezier(.5, 0, .2, 1);
+}
+.p1 { top: 0; transform-origin: 50% 100%; }
+.p2 { top: calc(100% / 3); }
+.p3 { top: calc(200% / 3); transform-origin: 50% 0; transition-delay: .45s; }
+#fold.folded .p1 { transform: translateZ(2px) rotateX(-180deg); }
+#fold.folded .p3 { transform: translateZ(1px) rotateX(180deg); }
+
+.face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: var(--paper);
+  box-shadow: 0 1px 0 #00000008;
+}
+.back { transform: rotateX(180deg); background: #f8f3eb; border: 1px solid #ece4d8; }
+.back .seal {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: 'Caveat', cursive;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.p1 .front { box-shadow: inset 0 -6px 8px -8px #0000002a; }
+.p3 .front { box-shadow: inset 0 6px 8px -8px #0000002a; }
+.face .sheet { position: absolute; left: 0; width: 100%; height: 300%; }
+.p2 .sheet { top: -100%; }
+.p3 .sheet { top: -200%; }
+
+#paper {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  padding: 36px 30px;
+  background: var(--paper);
+  box-shadow: 0 10px 30px #0000000f;
+  font-family: 'Caveat', cursive;
+  font-size: 25px;
+  line-height: 1.4;
+  user-select: text;
+  -webkit-user-select: text;
+  touch-action: pan-y;
+  visibility: hidden;
+}
+#paper.show { visibility: visible; }
+.sheet { padding: 36px 30px; font-family: 'Caveat', cursive; font-size: 25px; line-height: 1.4; color: var(--ink); }
+#paper h1, .sheet h1 { margin: 0 0 16px; font-size: 34px; font-weight: 700; }
+#paper p, .sheet p { margin: 0 0 14px; }
+#paper .sign, .sheet .sign { margin-top: 28px; text-align: right; }
