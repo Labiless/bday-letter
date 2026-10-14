@@ -226,3 +226,49 @@ body.mouse-hold, body.mouse-hold * { cursor: none !important; }
 #paper h1, .sheet h1 { margin: 0 0 16px; font-size: 34px; font-weight: 700; }
 #paper p, .sheet p { margin: 0 0 14px; }
 #paper .sign, .sheet .sign { margin-top: 28px; text-align: right; }
+
+/* ---------- Foto ---------- */
+#readHint { position: absolute; left: 0; right: 0; bottom: 28px; }
+/* su schermi stretti la lettera si accorcia per lasciare spazio sopra e sotto */
+@media (max-width: 700px) {
+  #reader.with-photos #fold { height: min(56dvh, 600px); transition: height .6s; }
+}
+#photos { position: absolute; inset: 0; pointer-events: none; }
+.photo {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  pointer-events: auto;
+  transform: rotate(var(--rot));
+  animation: popPhoto .6s cubic-bezier(.3, 1.6, .5, 1) both;
+  transition: left .4s, top .4s, width .4s;
+}
+.photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 6px 10px #00000026);
+  animation: float 5s ease-in-out infinite;
+  animation-delay: inherit;
+}
+.photo:nth-child(even) img { animation-duration: 6s; }
+@keyframes popPhoto {
+  from { transform: scale(0) rotate(calc(var(--rot) - 30deg)); opacity: 0; }
+}
+@keyframes float { 50% { transform: translateY(-5px) rotate(1.5deg); } }
+
+#lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #f4efe8ee;
+  cursor: zoom-out;
+  animation: fadeIn .3s both;
+}
+#lightbox[hidden] { display: none; }
+#lightbox img { max-width: 100%; max-height: 100%; filter: drop-shadow(0 10px 24px #0003); animation: popPhoto .4s cubic-bezier(.3, 1.4, .5, 1) both; --rot: 0deg; }

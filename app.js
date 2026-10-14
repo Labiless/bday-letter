@@ -246,10 +246,112 @@
       paper.classList.add('show');
       fold.querySelectorAll('.panel').forEach(p => p.remove());
       fold.style.cursor = 'auto';
-      // Aggancio per eventuali passi successivi (es. popup dell'immagine)
       window.dispatchEvent(new CustomEvent('lettera-aperta'));
+      fotoPronte.then(showPhotos);
     }, 1300);
   }
+
+  // ---------- Foto intorno alla lettera ----------
+  // Carica img/1, img/2, … (png, jpg, jpeg o webp) finché non ne mancano 3 di fila
+  async function loadPhotos() {
+    const exts = ['png', 'jpg', 'jpeg', 'webp'];
+    const tryLoad = src => new Promise(ok => {
+      const im = new Image();
+      im.onload = () => ok(im);
+      im.onerror = () => ok(null);
+      im.src = src;
+    });
+    const found = [];
+    for (let n = 1, misses = 0; misses < 3; n++) {
+      const hits = (await Promise.all(exts.map(x => tryLoad(`img/${n}.${x}`)))).filter(Boolean);
+      if (hits.length) { found.push(hits[0]); misses = 0; } else misses++;
+    }
+    return found;
+  }
+  const fotoPronte = loadPhotos();
+
+  const photos = [];
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  function showPhotos(imgs) {
+    if (!imgs.length) return;
+    reader.classList.add('with-photos');
+    // aspetta che la lettera si sia ristretta (vedi .with-photos nel CSS)
+    setTimeout(() => addPhotos(imgs), 650);
+  }
+
+  function addPhotos(imgs) {
+    // ordine mescolato, rotazione e spostamento fissi per ogni foto
+    imgs.map(im => ({ im, k: Math.random() })).sort((a, b) => a.k - b.k).forEach(({ im }, i) => {
+      const el = document.createElement('button');
+      el.className = 'photo';
+      el.style.setProperty('--rot', `${rand(-12, 12).toFixed(1)}deg`);
+      el.style.animationDelay = `${0.15 + i * 0.22}s`;
+      el.appendChild(im);
+      el.addEventListener('click', () => zoom(im.src));
+      $('#photos').appendChild(el);
+      photos.push({ el, jitter: rand(-1, 1), ratio: im.naturalHeight / im.naturalWidth });
+      setTimeout(() => Sfx.tone(520 + i * 70, 0.18, 0.08), 150 + i * 220);
+    });
+    layoutPhotos();
+  }
+
+  // Dispone le foto negli spazi liberi intorno alla lettera, senza coprirla
+  function layoutPhotos() {
+    if (!photos.length) return;
+    const W = innerWidth, H = innerHeight, gap = 10;
+    const L = fold.getBoundingClientRect();
+    const sides = L.left - gap >= 90;
+    const x0 = sides ? L.left : 0, w0 = sides ? L.width : W;
+    const regions = [
+      { x: 0, y: 0, w: L.left - gap, h: H },
+      { x: L.right + gap, y: 0, w: W - L.right - gap, h: H },
+      { x: x0, y: 0, w: w0, h: L.top - gap },
+      { x: x0, y: L.bottom + gap, w: w0, h: H - L.bottom - gap },
+    ].filter(r => r.w >= 70 && r.h >= 70);
+    if (!regions.length) return;
+
+    // quante foto per regione, in proporzione all'area
+    const total = regions.reduce((a, r) => a + r.w * r.h, 0);
+    const exact = regions.map(r => (r.w * r.h / total) * photos.length);
+    const counts = exact.map(Math.floor);
+    let left = photos.length - counts.reduce((a, b) => a + b, 0);
+    exact.map((v, i) => [v - counts[i], i]).sort((a, b) => b[0] - a[0]).slice(0, left).forEach(([, i]) => counts[i]++);
+
+    let p = 0;
+    regions.forEach((r, ri) => {
+      const k = counts[ri];
+      const horiz = r.w >= r.h;
+      const long = horiz ? r.w : r.h, short = horiz ? r.h : r.w;
+      const step = long / k;
+      for (let i = 0; i < k; i++, p++) {
+        const ph = photos[p];
+        // larghezza limitata dal lato corto della regione (così non sconfina sulla lettera)
+        const maxShort = short * 0.94;
+        let w = Math.min(step * 1.3, 300, horiz ? maxShort / ph.ratio : maxShort);
+        const h = w * ph.ratio;
+        const along = (i + 0.5) * step;
+        const slack = ((horiz ? r.h - h : r.w - w) / 2) * 0.8;
+        const across = (horiz ? r.h : r.w) / 2 + ph.jitter * Math.max(0, slack);
+        const cx = r.x + (horiz ? along : across);
+        const cy = r.y + (horiz ? across : along);
+        Object.assign(ph.el.style, {
+          width: `${w}px`,
+          left: `${cx - w / 2}px`,
+          top: `${cy - h / 2}px`,
+          zIndex: 1 + ((p * 3) % photos.length),
+        });
+      }
+    });
+  }
+
+  function zoom(src) {
+    const lb = $('#lightbox');
+    lb.querySelector('img').src = src;
+    lb.hidden = false;
+    Sfx.tick();
+  }
+  $('#lightbox').addEventListener('click', () => { $('#lightbox').hidden = true; });
 
   // ---------- Input ----------
   window.addEventListener('pointerdown', e => {
@@ -302,6 +404,7 @@
 
   window.addEventListener('resize', () => {
     if (S.phase === 'grab') parkTool();
+    layoutPhotos();
   });
 
   // ---------- Avvio ----------
